@@ -309,7 +309,8 @@ const TOK = {
   cuv:   { V: 200000, bps: 5.4,   mbs: 8,   idB: 4, nume: 'Cuvinte întregi cu ID' }
 };
 const E_WIN = { bf16: 28.1, f32: 12.5 };
-const E_OS = { train: 1.245, tile: 5.5, tc: 12, umbra: 27, int8: 48 };
+// tile: MĂSURAT os-410 (24 nov): 428,7 ms pe pasul #513 2×512. tc/umbra/int8: estimările vechi × 0,38 (cât a ieșit tile față de estimarea lui) — ESTIMARE.
+const E_OS = { train: 1.245, tile: 2.1, tc: 4.6, umbra: 10.3, int8: 18.2 };
 const ATT_OS = { baza: 29.8e-6, placi3: 1.67e-6, tc: 0.5e-6 };
 const STANDARD = {
   sistem: 'win', mmWin: 'bf16', mmOs: 'train', atentie: 'baza', colsum: false, lipit: false, masura: false, arena: '6g',
@@ -404,7 +405,8 @@ function calc(S) {
     v, nevoie, buget, incape, varsat, r, ram, ramOk, incarcare, temp, wati, porneste, invata,
     simbPas: N * S.adunare, vedeLitere: T * t.bps, tCit, tTok,
     trafic: (porneste ? ((S.date === 'vram' ? 0 : N * t.idB) + 2 * oCaiet + 2 * varsat * MiB + (os && S.mvRam ? 2 * P * 4 / S.adunare : 0)) / tLot : 0),
-    munca: simb * t.bps * Pm * invata
+    munca: simb * t.bps * Pm * invata,
+    simbPeParam: HW.textOcteti / t.bps / P
   };
 }
 function scor(S) { const a = calc(S), b = calc(STANDARD); return Math.round(100 * a.munca / b.munca); }
@@ -419,7 +421,7 @@ var GRUPURI = [
   { id: 'mmWin', tip: 'seg', doar: 'win', et: 'Precizia înmulțirilor', o: [['bf16', '16 biți (bf16)'], ['f32', '32 de biți']],
     h: function (S) { return S.mmWin === 'bf16' ? ['M', 'Înmulțirile merg pe circuitele speciale ale plăcii și țin jumătate din memorie. Așa antrenăm azi.'] : ['E', 'Numere întregi pe 32 de biți: de două ori mai multă memorie și cam jumătate din viteză. Nemăsurat la noi pe placă.']; } },
   { id: 'mmOs', tip: 'sel', doar: 'os', et: 'Programul de înmulțire a matricelor', o: [['train', 'Simplu (mm_train), cel de azi'], ['tile', 'Pe plăci (mm_train_tile)'], ['tc', 'Circuitele speciale (mm_tc)'], ['umbra', 'Circuitele speciale + umbra pe 16 biți'], ['int8', '8 biți pe circuitele speciale']],
-    h: function (S) { return { train: ['M', '0,83 TFLOP/s pe placă, cam 4 % din puterea ei. Înmulțirile sunt 93 % din pas.'], tile: ['D', 'De 3–6 ori peste cel simplu. Socotit, încă netestat pe placă.'], tc: ['E', 'În jur de 10 TFLOP/s: memoria îl ține pe loc cât intrările sunt pe 32 de biți.'], umbra: ['I', 'Greutățile au o copie pe 16 biți, activările se scriu direct pe 16. Ținta: 70–110 % din Windows.'], int8: ['I', 'De vreo două ori peste 16 biți. Nu știm încă dacă se poate scoate și poate strica nota la examen.'] }[S.mmOs]; } },
+    h: function (S) { return { train: ['M', '0,83 TFLOP/s pe placă, cam 4 % din puterea ei. Înmulțirile sunt 93 % din pas.'], tile: ['M', '~1,4 TFLOP/s pe placă (os-410, 24 nov): de 1,7 ori peste cel simplu. Se prezisese de 3–6 ori.'], tc: ['E', 'În jur de 4–5 TFLOP/s: estimarea veche (~10–12) micșorată cu cât a greșit cea pentru mm_train_tile.'], umbra: ['I', 'Greutățile au o copie pe 16 biți, activările se scriu direct pe 16. Estimat ~10 TFLOP/s (micșorat după os-410).'], int8: ['I', 'De vreo două ori peste 16 biți (estimat ~18 TFLOP/s, micșorat după os-410). Nu știm încă dacă se poate scoate și poate strica nota la examen.'] }[S.mmOs]; } },
   { id: 'atentie', tip: 'seg', doar: 'os', et: 'Programul de atenție', o: [['baza', 'De bază'], ['placi3', 'Pe plăci gen 3'], ['tc', 'Circuite speciale']],
     h: function (S) { return { baza: ['M', 'Varianta veche: 366 ms din pasul #513 la lot 2 × 512.'], placi3: ['M', '20,5 ms pe pas la os-407, de 18 ori mai puțin decât cea de bază.'], tc: ['I', 'Atenția mutată și ea pe circuitele speciale. Încă nescrisă.'] }[S.atentie]; } },
   { id: 'colsum', tip: 'com', doar: 'os', et: 'Suma pe coloane împărțită (colsum)', h: function () { return ['D', 'Un program mic care azi ia 24 ms pe pas. Împărțit pe rânduri: 2,5–5 ms.']; } },
@@ -627,6 +629,7 @@ function deseneaza() {
   /* de ținut minte */
   var a = [];
   if (!r.porneste) a.push(['rau', motiv(r) + (os && !r.incape && !S.unica ? ' Încearcă lot mai mic, recalcularea activărilor, stările optimizatorului în RAM sau o singură memorie.' : !os && !r.incape ? ' Încearcă lot mai mic sau recalcularea activărilor.' : '')]);
+  if (r.simbPeParam < 10) a.push(['', 'Textul nostru e prea puțin pentru un model atât de mare: ' + nr(r.simbPeParam, 1) + ' simboluri pe parametru (bine e peste ~20). Scorul crește cu mărimea, dar modelul nu va învăța tot ce ar putea.']);
   if (os && S.mmOs === 'int8') a.push(['', 'Antrenarea pe 8 biți e o ipoteză: nu știm dacă se poate scoate pe placă și poate strica nota. Întâi o probă mică.']);
   if (os && (S.mmOs === 'tile' || S.mmOs === 'tc' || S.mmOs === 'umbra')) a.push(['', 'Viteza programului de înmulțire ales e socotită, nu măsurată. Placa are ultimul cuvânt.']);
   if (S.bucati > 1) a.push(['', 'Câștigul bucăților e măsurat de autori pe modele mai mari și pe mult mai mult text. În faza pe bucăți modelul nu poate fi examinat.']);
