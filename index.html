@@ -339,7 +339,7 @@ function calc(S) {
     const sc = (d / 768) / pf, tl = N * L * (1 + rc / 3);
     tAT = tl * ATT_OS[S.atentie] * (T / 512) * sc * (S.masura ? 0.85 : 1);
     const usor = (S.masura ? 0.7 : 1) * (bAct === 2 ? 0.6 : 1) * (S.croit ? 0.75 : 1);
-    tAlte = tl * ((S.colsum ? 0.3e-6 : 1.98e-6) + 0.5e-6 * (S.lipit ? 0.7 : 1)) * sc * usor + L * 0.0003 * (S.lipit ? 0.85 : 1);
+    tAlte = tl * ((S.colsum ? 0.3e-6 : 1.98e-6) + 0.5e-6 * (S.lipit ? 0.7 : 1)) * sc * usor + L * 0.0003 * (S.lipit ? 0.97 : 1) + 0.00028;
     if (S.mvRam) {
       const x = 2 * P * 4 / link + P * 4 * 5 / 40e9;
       tOpt = 0; tMut += x * (S.paralel ? 0.1 : 1) / S.adunare;
@@ -364,10 +364,10 @@ function calc(S) {
     greutati: P * 4 / MiB,
     lucru: kLucru * P * 4 / MiB,
     optim: kOpt * P * 4 / MiB,
-    activari: (S.recalcul ? N * a + L * N * d * 4 : N * L * a) / MiB + 240,
+    activari: (S.recalcul ? N * a + L * N * d * 4 : N * L * a) / MiB,
     iesire: N * V * es * (bAct + 8) / MiB,
     date: S.date === 'vram' ? HW.textOcteti / t.bps * t.idB / MiB : 0,
-    sistem: os ? 0 : 750
+    sistem: os ? 296 : 990
   };
   const nevoie = v.greutati + v.lucru + v.optim + v.activari + v.iesire + v.date + v.sistem;
   const buget = !os ? 7000 : (S.arena === 'tot' ? 7900 : 6144);
@@ -596,7 +596,7 @@ function deseneaza() {
   $('vram-cat').textContent = nr(r.nevoie) + ' / ' + nr(r.buget) + ' MiB';
   $('vram-ce').textContent = os ? (S.arena === 'tot' ? 'Memoria plăcii, toată a antrenării' : 'Memoria plăcii, arena de 6 GiB') : 'Memoria plăcii, paza la 7.000';
   var vl = $('vram-lista'); vl.textContent = '';
-  var comp = [['Greutăți', r.v.greutati], ['Gradient și copii de lucru', r.v.lucru], ['Stările optimizatorului', r.v.optim], ['Activări', r.v.activari], ['Ieșirea', r.v.iesire], ['Șirul de simboluri', r.v.date], ['Windows și ecranul', r.v.sistem]];
+  var comp = [['Greutăți', r.v.greutati], ['Gradient și copii de lucru', r.v.lucru], ['Stările optimizatorului', r.v.optim], ['Activări', r.v.activari], ['Ieșirea', r.v.iesire], ['Șirul de simboluri', r.v.date], [os ? 'Zona de lucru a motorului' : 'Windows și ecranul', r.v.sistem]];
   var mx = 1; comp.forEach(function (c) { if (c[1] > mx) mx = c[1]; });
   comp.forEach(function (c) { if (c[1] < 0.5) return; var li = el('li'); li.appendChild(el('span', null, c[0]));
     var b = el('span', 'b'), i = el('i'); i.style.width = (c[1] / mx * 100) + '%'; b.appendChild(i); li.appendChild(b);

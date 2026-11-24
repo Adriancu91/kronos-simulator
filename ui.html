@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulatorul Kronos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Oxanium:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Planșă de inginer: hârtie albastră, linii reci, un singur semnal cald pentru locul unde se pierde timpul. */
+  color-scheme: dark;
+  --fond:#071124; --hartie:#0c1a33; --hartie2:#12264a; --linie:#27457a; --linie2:#3a62a6;
+  --cerneala:#e8f1ff; --cerneala2:#a9bedd; --cerneala3:#7790b5;
+  --semnal:#8fdcff; --cald:#ffb547; --bine:#57dba2; --rau:#ff7887;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#9085e9;
+  --titlu:"Oxanium","Eurostile","Trebuchet MS",sans-serif;
+  --text:"IBM Plex Sans","Segoe UI",Roboto,Arial,sans-serif;
+  --raza:6px;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--fond);
+  background-image:linear-gradient(rgba(58,98,166,.13) 1px,transparent 1px),linear-gradient(90deg,rgba(58,98,166,.13) 1px,transparent 1px);
+  background-size:24px 24px;
+  color:var(--cerneala); font:400 15px/1.45 var(--text);
+  -webkit-text-size-adjust:100%;
+}
+h1,h2,h3,p,ul{margin:0;padding:0}
+ul{list-style:none}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--semnal);outline-offset:2px}
+.num{font-family:var(--titlu);font-variant-numeric:tabular-nums}
+.pagina{max-width:1180px;margin:0 auto;padding:0 16px 56px}
+
+/* cartuș */
+.cartus{display:grid;grid-template-columns:1fr auto;border:1px solid var(--linie2);margin:16px 0 12px;background:var(--hartie)}
+.cartus > div{padding:10px 12px}
+.cartus .nume{border-right:1px solid var(--linie2)}
+.cartus h1{font:700 24px/1.1 var(--titlu);letter-spacing:.04em;text-transform:uppercase;text-wrap:balance}
+.cartus .sub{color:var(--cerneala2);font-size:13px;margin-top:4px}
+.cartus .date{font:600 11px/1.5 var(--titlu);letter-spacing:.08em;text-transform:uppercase;color:var(--cerneala2);text-align:right;white-space:nowrap}
+.cartus .date b{color:var(--cerneala);font-weight:600}
+
+/* HUD lipit sus */
+.hud{position:sticky;top:0;z-index:20;background:rgba(7,17,36,.94);backdrop-filter:blur(6px);border:1px solid var(--linie2);border-radius:var(--raza);
+  display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:8px 12px;margin-bottom:14px}
+.hud .scor{display:flex;align-items:baseline;gap:8px}
+.hud .scor b{font:700 38px/1 var(--titlu);font-variant-numeric:tabular-nums;color:var(--semnal)}
+.hud .scor span{font:600 11px/1 var(--titlu);letter-spacing:.1em;text-transform:uppercase;color:var(--cerneala2)}
+.hud .mijloc{min-width:0}
+.hud .mijloc .v{font:600 16px/1.2 var(--titlu);font-variant-numeric:tabular-nums}
+.hud .mijloc .d{font-size:12px;color:var(--cerneala2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pastila{display:inline-flex;align-items:center;gap:6px;border:1px solid currentColor;border-radius:99px;padding:3px 9px;font:600 11px/1.2 var(--titlu);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.pastila::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.pastila.bine{color:var(--bine)} .pastila.rau{color:var(--rau)} .pastila.cald{color:var(--cald)}
+.hud.oprit .scor b{color:var(--rau)}
+
+.coloane{display:grid;gap:18px}
+@media (min-width:980px){
+  .coloane{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}
+  .stanga{position:sticky;top:74px;max-height:calc(100vh - 84px);overflow-y:auto;padding-right:4px}
+}
+.sectiune{background:var(--hartie);border:1px solid var(--linie);border-radius:var(--raza);padding:14px;margin-bottom:14px}
+.sectiune > h2, summary h2{font:600 13px/1.2 var(--titlu);letter-spacing:.12em;text-transform:uppercase;color:var(--semnal)}
+.sectiune > h2{margin-bottom:10px}
+.mic{font-size:12.5px;color:var(--cerneala2)}
+
+/* planșa */
+.plansa{display:grid;gap:0}
+.rand2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bloc{position:relative;border:1.5px solid var(--linie2);border-radius:4px;background:var(--hartie2);padding:10px 10px 9px;min-width:0}
+.bloc h3{font:700 12px/1 var(--titlu);letter-spacing:.14em;text-transform:uppercase}
+.bloc .tip{font-size:12px;color:var(--cerneala2);margin:3px 0 6px}
+.bloc .stare{font-size:12.5px;color:var(--cerneala)}
+.bloc.gat{border-color:var(--cald);box-shadow:0 0 0 1px var(--cald) inset}
+.bloc .aici{display:none;position:absolute;top:-9px;right:8px;background:var(--cald);color:#1c1300;font:700 10px/1 var(--titlu);letter-spacing:.08em;text-transform:uppercase;padding:3px 6px;border-radius:3px}
+.bloc.gat .aici{display:block}
+.sarcini{display:flex;flex-wrap:wrap;gap:4px}
+.sarcini li{font-size:11.5px;border:1px solid var(--linie2);border-radius:3px;padding:1px 6px;color:var(--cerneala2)}
+.tevi2{display:grid;grid-template-columns:1fr 1fr;gap:10px;height:22px}
+.teava{position:relative;justify-self:center;width:4px;height:100%;border-radius:2px;
+  background:repeating-linear-gradient(to bottom,var(--semnal) 0 6px,transparent 6px 14px);opacity:.28}
+.teava.curge{opacity:1;animation:curge var(--dur,1.2s) linear infinite}
+.teava.sus.curge{animation-direction:reverse}
+.teava.gat{background:repeating-linear-gradient(to bottom,var(--cald) 0 6px,transparent 6px 14px)}
+@keyframes curge{from{background-position-y:0}to{background-position-y:14px}}
+.legatura{display:grid;grid-template-columns:auto auto 1fr;gap:10px;align-items:center;height:52px;padding-left:calc(50% - 9px)}
+.legatura .et{font-size:12px;color:var(--cerneala2);line-height:1.3}
+.legatura .et b{font:600 12px var(--titlu);letter-spacing:.06em;color:var(--cerneala);display:block}
+@media (prefers-reduced-motion:reduce){.teava.curge{animation:none}}
+
+.metru{position:relative;height:10px;border-radius:5px;background:#081730;border:1px solid var(--linie);overflow:visible;margin:6px 0 4px}
+.metru i{display:block;height:100%;border-radius:4px;background:var(--semnal);width:0;max-width:100%;transition:width .25s}
+.metru.plin i{background:var(--rau)}
+.metru .prag{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--cald)}
+.metru-rand{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--cerneala2)}
+.metru-rand b{color:var(--cerneala);font:600 12.5px var(--titlu);font-variant-numeric:tabular-nums}
+.gpu-sus{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:6px 0 8px}
+.gpu-sus div{border-left:2px solid var(--linie2);padding-left:7px}
+.gpu-sus b{display:block;font:600 17px/1.1 var(--titlu);font-variant-numeric:tabular-nums}
+.gpu-sus span{font-size:11.5px;color:var(--cerneala2)}
+.lista-bare{display:grid;gap:3px;margin-top:8px}
+.lista-bare li{display:grid;grid-template-columns:minmax(0,11.5em) 1fr 5.4em;gap:8px;align-items:center;font-size:12px;color:var(--cerneala2)}
+.lista-bare .b{height:6px;background:#081730;border-radius:3px}
+.lista-bare .b i{display:block;height:100%;min-width:2px;border-radius:3px;background:var(--semnal)}
+.lista-bare .n{text-align:right;white-space:nowrap;color:var(--cerneala);font-variant-numeric:tabular-nums}
+
+/* timpul */
+.stiva{display:flex;gap:2px;height:16px;margin:8px 0 10px}
+.stiva i{display:block;min-width:0;border-radius:2px;transition:flex-grow .25s}
+.stiva i:first-child{border-radius:4px 2px 2px 4px}.stiva i:last-child{border-radius:2px 4px 4px 2px}
+.legenda{display:grid;gap:4px}
+.legenda li{display:grid;grid-template-columns:12px 1fr auto auto;gap:8px;align-items:center;font-size:12.5px}
+.legenda .p{width:12px;height:12px;border-radius:3px}
+.legenda .ms,.legenda .pc{font-variant-numeric:tabular-nums;color:var(--cerneala2);text-align:right;min-width:3.2em}
+.legenda li.top{font-weight:600}
+.legenda li.top .n::after{content:" · aici se pierde timpul";color:var(--cald);font-weight:500}
+
+/* cifre */
+.cifre{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cifra{border:1px solid var(--linie);border-radius:4px;padding:8px 10px;min-width:0}
+.cifra span{display:block;font-size:11.5px;color:var(--cerneala2)}
+.cifra b{display:block;font:600 19px/1.2 var(--titlu);font-variant-numeric:tabular-nums}
+.cifra em{font-style:normal;font-size:11.5px;color:var(--cerneala3)}
+
+.atentie li{position:relative;padding:6px 0 6px 18px;font-size:13px;border-top:1px dashed var(--linie)}
+.atentie li:first-child{border-top:0}
+.atentie li::before{content:"";position:absolute;left:2px;top:12px;width:8px;height:8px;border-radius:2px;background:var(--cald)}
+.atentie li.rau::before{background:var(--rau)} .atentie li.info::before{background:var(--linie2)}
+
+/* butoane */
+.rand-b{display:flex;flex-wrap:wrap;gap:8px}
+.btn{border:1px solid var(--linie2);background:var(--hartie2);border-radius:4px;padding:8px 11px;font:600 12.5px/1.2 var(--titlu);letter-spacing:.04em;min-height:38px}
+.btn:hover{border-color:var(--semnal)}
+.btn.plin{background:var(--semnal);border-color:var(--semnal);color:#04203a}
+.btn.reset{border-color:var(--cald);color:var(--cald)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+
+/* comenzi */
+details.grup{background:var(--hartie);border:1px solid var(--linie);border-radius:var(--raza);margin-bottom:10px}
+details.grup > summary{list-style:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:13px 14px;cursor:pointer}
+details.grup > summary::-webkit-details-marker{display:none}
+details.grup > summary::after{content:"+";font:600 18px/1 var(--titlu);color:var(--cerneala2)}
+details.grup[open] > summary::after{content:"–"}
+details.grup .in{padding:0 14px 6px}
+.cmd{padding:11px 0;border-top:1px dashed var(--linie)}
+.cmd.inactiv{opacity:.42}
+.cmd .cap{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.cmd label,.cmd .et{font-weight:600;font-size:14px}
+.cmd output{font:600 14px var(--titlu);font-variant-numeric:tabular-nums;color:var(--semnal);white-space:nowrap}
+.cmd .hint{font-size:12.5px;color:var(--cerneala2);margin-top:5px}
+.cmd .hint .s{display:inline-block;font:700 9.5px/1 var(--titlu);letter-spacing:.08em;border:1px solid var(--linie2);border-radius:3px;padding:2px 4px;margin-right:5px;color:var(--cerneala);vertical-align:1px}
+.cmd .hint .s.M{border-color:var(--bine);color:var(--bine)} .cmd .hint .s.I{border-color:var(--cald);color:var(--cald)}
+.cmd .schimbat{display:none;width:7px;height:7px;border-radius:50%;background:var(--cald);margin-left:6px;vertical-align:2px}
+.cmd.dif .schimbat{display:inline-block}
+input[type=range]{width:100%;margin:10px 0 0;accent-color:var(--semnal);height:26px}
+select{width:100%;margin-top:8px;background:var(--hartie2);border:1px solid var(--linie2);border-radius:4px;padding:9px 8px;min-height:40px}
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.seg button{flex:1 1 auto;border:1px solid var(--linie2);background:transparent;border-radius:4px;padding:8px 9px;font-size:13px;min-height:38px}
+.seg button[aria-pressed=true]{background:var(--semnal);border-color:var(--semnal);color:#04203a;font-weight:600}
+.comut{flex:none;position:relative;width:46px;height:26px;border-radius:13px;border:1px solid var(--linie2);background:#081730;padding:0}
+.comut::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--cerneala3);transition:transform .15s}
+.comut[aria-checked=true]{background:var(--semnal);border-color:var(--semnal)}
+.comut[aria-checked=true]::after{transform:translateX(20px);background:#04203a}
+
+.variante li{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center;padding:8px 0;border-top:1px dashed var(--linie)}
+.variante .nm{font-weight:600;font-size:13.5px}
+.variante .dt{font-size:12px;color:var(--cerneala2)}
+.variante .b{grid-column:1/-1;height:6px;background:#081730;border-radius:3px}
+.variante .b i{display:block;height:100%;min-width:2px;border-radius:3px;background:var(--semnal)}
+.variante button{border:1px solid var(--linie2);background:transparent;border-radius:4px;padding:6px 9px;font-size:12.5px;min-height:34px}
+textarea{width:100%;min-height:150px;background:#081730;border:1px solid var(--linie2);border-radius:4px;color:var(--cerneala);font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;padding:8px;margin-top:10px}
+.mesaj{font-size:12.5px;color:var(--bine);min-height:1.2em;margin-top:8px}
+.nota li{font-size:12.5px;color:var(--cerneala2);padding:3px 0}
+.nota b{color:var(--cerneala)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="pagina">
+
+<header class="cartus">
+  <div class="nume">
+    <h1>Simulatorul Kronos</h1>
+    <p class="sub">Planșa workstation-ului. Schimbi rețeta de calcul și vezi pe loc ce se întâmplă.</p>
+  </div>
+  <div class="date">Planșa <b>01</b><br>Scara <b>simplificată</b><br>Cifre <b>de simulare</b></div>
+</header>
+
+<div class="hud" id="hud" aria-live="polite">
+  <div class="scor"><b class="num" id="h-scor">100</b><span>scor</span></div>
+  <div class="mijloc"><div class="v num" id="h-simb">–</div><div class="d" id="h-delta">–</div></div>
+  <span class="pastila bine" id="h-stare">Pornește</span>
+</div>
+
+<div class="coloane">
+<div class="stanga">
+
+  <section class="sectiune">
+    <h2>Planșa</h2>
+    <div class="plansa">
+      <div class="rand2">
+        <div class="bloc" id="b-disc"><span class="aici">Aici se pierde timpul</span>
+          <h3>Disc</h3><p class="tip">SAS și SSD</p><p class="stare" id="disc-stare"></p></div>
+        <div class="bloc" id="b-cpu"><span class="aici">Aici se pierde timpul</span>
+          <h3>Procesor</h3><p class="tip">i9-10980XE · 18 nuclee</p><ul class="sarcini" id="cpu-sarcini"></ul></div>
+      </div>
+      <div class="tevi2"><div class="teava" id="t-disc"></div><div class="teava" id="t-cpu"></div></div>
+      <div class="bloc" id="b-ram"><span class="aici">Aici se pierde timpul</span>
+        <h3>RAM</h3>
+        <div class="metru" id="ram-metru"><i></i></div>
+        <div class="metru-rand"><span id="ram-ce"></span><b id="ram-cat"></b></div>
+      </div>
+      <div class="legatura">
+        <div class="teava" id="t-jos"></div><div class="teava sus" id="t-sus"></div>
+        <div class="et"><b id="link-nume"></b><span id="link-trafic"></span></div>
+      </div>
+      <div class="bloc" id="b-gpu"><span class="aici">Aici se pierde timpul</span>
+        <h3>Placa video</h3><p class="tip">RTX 3070 Ti · 8 GB · 290 W</p>
+        <div class="gpu-sus">
+          <div><b id="g-inc">–</b><span>încărcare</span></div>
+          <div><b id="g-temp">–</b><span>temperatură</span></div>
+          <div><b id="g-w">–</b><span>putere</span></div>
+        </div>
+        <div class="metru" id="vram-metru"><i></i><span class="prag" id="vram-prag" title="Limita de memorie pentru antrenare"></span></div>
+        <div class="metru-rand"><span id="vram-ce">Memoria plăcii</span><b id="vram-cat"></b></div>
+        <ul class="lista-bare" id="vram-lista"></ul>
+        <p class="mic" id="vram-nota" style="margin-top:6px"></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sectiune">
+    <h2>Unde se duce timpul unui lot</h2>
+    <p class="mic" id="timp-total"></p>
+    <div class="stiva" id="stiva" role="img" aria-label="Împărțirea timpului unui lot"></div>
+    <ul class="legenda" id="legenda"></ul>
+  </section>
+
+  <section class="sectiune">
+    <h2>Cifrele rețetei</h2>
+    <div class="cifre" id="cifre"></div>
+  </section>
+
+  <section class="sectiune" id="sec-atentie">
+    <h2>De ținut minte la rețeta asta</h2>
+    <ul class="atentie" id="atentie"></ul>
+  </section>
+</div>
+
+<div class="dreapta">
+  <section class="sectiune">
+    <h2>Pornește de la</h2>
+    <div class="rand-b" id="presetari"></div>
+    <div class="rand-b" style="margin-top:10px">
+      <button class="btn reset" id="reset" type="button">Resetare la standard</button>
+    </div>
+    <p class="mic" style="margin-top:8px">Standard = rețeta de azi din Windows, linia #513. Punctul portocaliu arată ce ai schimbat.</p>
+  </section>
+
+  <div id="comenzi"></div>
+
+  <section class="sectiune">
+    <h2>Variantele mele</h2>
+    <div class="rand-b"><button class="btn" id="tine" type="button">Ține minte varianta asta</button></div>
+    <ul class="variante" id="variante"></ul>
+    <p class="mic" id="variante-gol">Nimic salvat încă. Ține minte două-trei variante și compară-le aici.</p>
+  </section>
+
+  <section class="sectiune">
+    <h2>Fișierul cu setări</h2>
+    <p class="mic">Când ai un scor bun, descarcă fișierul și trimite-l la analizat. Conține setările, ce ai schimbat față de standard și cifrele simulării.</p>
+    <div class="rand-b" style="margin-top:10px">
+      <button class="btn plin" id="descarca" type="button">Descarcă setările</button>
+      <button class="btn" id="copiaza" type="button">Copiază textul</button>
+      <button class="btn" id="incarca-b" type="button">Încarcă un fișier</button>
+      <input type="file" id="incarca" accept=".json,application/json" hidden>
+    </div>
+    <p class="mesaj" id="mesaj" role="status"></p>
+    <textarea id="text-setari" readonly hidden aria-label="Setările în format text"></textarea>
+  </section>
+
+  <section class="sectiune">
+    <h2>Cum citești cifrele</h2>
+    <ul class="nota">
+      <li><b>Scor 100</b> = rețeta de azi din Windows. <b>Scor 200</b> = aceeași învățare în jumătate din timp. Scorul ține cont de mărimea modelului, deci nu crește doar pentru că faci Kronos mai mic.</li>
+      <li><b>MĂSURAT</b> = cifră din jurnalele noastre. <b>DEDUS</b> = socotită din cifre măsurate sau din lucrări publice. <b>ESTIMARE</b> = aproximare a simulatorului. <b>IPOTEZĂ</b> = încă neprobat.</li>
+      <li>Simulatorul se potrivește la 1–2 % cu patru măsurători: Windows #513 (39.265 simboluri/s, 5.187 MB), Windows #651 (15.509 simboluri/s), os-403 (1.124 ms pe pas) și os-407 (778 ms pe pas).</li>
+      <li>E un model simplificat. Tot ce nu e MĂSURAT trebuie probat pe placă înainte să conteze.</li>
+    </ul>
+  </section>
+</div>
+</div>
+</div>
+
+<script>
+(function(){
+"use strict";
+/*MODEL*/
+
+var NUME_SISTEM = { win: 'Windows + PyTorch', os: 'OS-ul nostru + motorul nostru' };
+var CULORI = { mm: 'var(--s1)', at: 'var(--s2)', alte: 'var(--s3)', opt: 'var(--s4)', date: 'var(--s5)', mut: 'var(--s6)' };
+
+var GRUPURI = [
+ { t: 'Sistemul și motorul', c: [
+  { id: 'sistem', tip: 'seg', et: 'Cine conduce placa', o: [['win', 'Windows + PyTorch'], ['os', 'OS-ul nostru']],
+    h: function () { return ['M', 'Windows e măsurat pe ore întregi de antrenare. Motorul nostru e în construcție: aici vezi ce aduce fiecare piesă.']; } },
+  { id: 'mmWin', tip: 'seg', doar: 'win', et: 'Precizia înmulțirilor', o: [['bf16', '16 biți (bf16)'], ['f32', '32 de biți']],
+    h: function (S) { return S.mmWin === 'bf16' ? ['M', 'Înmulțirile merg pe circuitele speciale ale plăcii și țin jumătate din memorie. Așa antrenăm azi.'] : ['E', 'Numere întregi pe 32 de biți: de două ori mai multă memorie și cam jumătate din viteză. Nemăsurat la noi pe placă.']; } },
+  { id: 'mmOs', tip: 'sel', doar: 'os', et: 'Programul de înmulțire a matricelor', o: [['train', 'Simplu (mm_train), cel de azi'], ['tile', 'Pe plăci (mm_train_tile)'], ['tc', 'Circuitele speciale (mm_tc)'], ['umbra', 'Circuitele speciale + umbra pe 16 biți'], ['int8', '8 biți pe circuitele speciale']],
+    h: function (S) { return { train: ['M', '0,83 TFLOP/s pe placă, cam 4 % din puterea ei. Înmulțirile sunt 93 % din pas.'], tile: ['D', 'De 3–6 ori peste cel simplu. Socotit, încă netestat pe placă.'], tc: ['E', 'În jur de 10 TFLOP/s: memoria îl ține pe loc cât intrările sunt pe 32 de biți.'], umbra: ['I', 'Greutățile au o copie pe 16 biți, activările se scriu direct pe 16. Ținta: 70–110 % din Windows.'], int8: ['I', 'De vreo două ori peste 16 biți. Nu știm încă dacă se poate scoate și poate strica nota la examen.'] }[S.mmOs]; } },
+  { id: 'atentie', tip: 'seg', doar: 'os', et: 'Programul de atenție', o: [['baza', 'De bază'], ['placi3', 'Pe plăci gen 3'], ['tc', 'Circuite speciale']],
+    h: function (S) { return { baza: ['M', 'Varianta veche: 366 ms din pasul #513 la lot 2 × 512.'], placi3: ['M', '20,5 ms pe pas la os-407, de 18 ori mai puțin decât cea de bază.'], tc: ['I', 'Atenția mutată și ea pe circuitele speciale. Încă nescrisă.'] }[S.atentie]; } },
+  { id: 'colsum', tip: 'com', doar: 'os', et: 'Suma pe coloane împărțită (colsum)', h: function () { return ['D', 'Un program mic care azi ia 24 ms pe pas. Împărțit pe rânduri: 2,5–5 ms.']; } },
+  { id: 'lipit', tip: 'com', doar: 'os', et: 'Programe lipite', h: function () { return ['E', 'Doi pași mărunți într-un singur program: mai puține lansări pe placă. Fiecare lipire se judecă pe placă.']; } },
+  { id: 'masura', tip: 'com', doar: 'os', et: 'Programe pe măsura lui Kronos, alese noaptea', h: function () { return ['D', 'Fiecare formă de matrice primește programul ei, iar cursa de noapte îl păstrează pe cel mai rapid. Câștig socotit: 10–30 %.']; } },
+  { id: 'arena', tip: 'seg', doar: 'os', et: 'Memoria plăcii pentru antrenare', o: [['6g', '6 GiB (azi)'], ['tot', 'Toată placa']],
+    h: function () { return ['E', 'Windows ține o parte din placă pentru ecran. La noi poate fi toată a antrenării.']; } },
+  { id: 'putere', tip: 'gl', et: 'Limita de putere a plăcii', min: 50, max: 100, pas: 5, f: function (v) { return v + ' %'; }, h: function () { return ['E', 'Mai puțini wați înseamnă placă mai rece, dar mai lentă.']; } }
+ ]},
+ { t: 'Modelul Kronos', c: [
+  { id: 'straturi', tip: 'gl', et: 'Straturi', min: 2, max: 48, pas: 1, f: function (v) { return v; }, h: function () { return ['M', '#513 are 12 straturi, #651 are 24.']; } },
+  { id: 'latime', tip: 'gl', et: 'Lățimea unui strat', min: 256, max: 1536, pas: 64, f: function (v) { return v; }, h: function (S, r) { return ['M', 'Azi 768. Numărul de capete de atenție merge cu lățimea: acum ' + r.capete + '.']; } },
+  { id: 'context', tip: 'seg', et: 'Contextul (simboluri văzute odată)', o: [[128, '128'], [256, '256'], [512, '512'], [1024, '1.024'], [2048, '2.048']],
+    h: function (S, r) { return ['E', 'Cu tokenizarea aleasă, modelul vede cam ' + nr(r.vedeLitere) + ' de litere odată. Context dublu = atenție de patru ori mai scumpă.']; } },
+  { id: 'croit', tip: 'com', et: 'Kronos croit pe placă', h: function () { return ['D', 'Doar piese ieftine pentru placă: ReLU², normă simplă, fără bias. Câștig socotit 10–20 % în motorul nostru. E un model nou, antrenat de la zero.']; } }
+ ]},
+ { t: 'Tokenizarea', c: [
+  { id: 'tok', tip: 'sel', et: 'Cum se taie textul în simboluri', o: [['oct', 'Literă cu literă (256 de simboluri)'], ['bpe8', 'BPE, 8.192 de bucăți'], ['bpe16', 'BPE, 16.384 de bucăți (azi)'], ['bpe32', 'BPE, 32.768 de bucăți'], ['cuv', 'Cuvinte întregi cu ID (200.000)']],
+    h: function (S) { return { oct: ['E', 'Un simbol = o literă. Ieșire mică și ușoară, dar de 3,6 ori mai multe simboluri pentru același text.'], bpe8: ['E', 'Un simbol ține cam 3,2 litere.'], bpe16: ['M', 'Un simbol ține în medie 3,64 litere, măsurat pe textul nostru de 4,9 GB.'], bpe32: ['E', 'Un simbol ține cam 4 litere, dar tabelul de la intrare și ieșire se dublează.'], cuv: ['E', 'Ideea HMAI: fiecare formă de cuvânt are un număr. Un simbol ține cam 5,4 litere, dar ieșirea are 200.000 de variante.'] }[S.tok]; } },
+  { id: 'esantion', tip: 'com', et: 'Ieșirea pe eșantion', h: function (S, r) { return ['D', 'Se calculează doar o optime din cele ' + nr(r.V) + ' de ieșiri. La rețeta de azi ieșirea e cam 11 % din pas.']; } },
+  { id: 'tokLive', tip: 'com', et: 'Tokenizare din mers', h: function () { return ['E', 'Textul e tăiat în simboluri la fiecare lot, pe procesor. Azi e tăiat o singură dată, dinainte.']; } },
+  { id: 'fire', tip: 'gl', et: 'Nuclee pentru tokenizare', min: 1, max: 18, pas: 1, f: function (v) { return v; }, h: function () { return ['E', 'Contează doar cu tokenizarea din mers.']; } }
+ ]},
+ { t: 'Lotul și matricele', c: [
+  { id: 'lot', tip: 'gl', et: 'Ferestre într-un lot', min: 1, max: 64, pas: 1, f: function (v) { return v; }, h: function (S, r) { return ['M', 'Câte bucăți de text intră odată pe placă: acum ' + nr(r.N) + ' de simboluri. Lot mare = placă plină, dar mai multă memorie.']; } },
+  { id: 'adunare', tip: 'gl', et: 'Loturi adunate la un pas de optimizator', min: 1, max: 32, pas: 1, f: function (v) { return v; }, h: function (S, r) { return ['M', 'Un pas de optimizator vede ' + nr(r.simbPas) + ' de simboluri. Azi: 49.152.']; } },
+  { id: 'recalcul', tip: 'com', et: 'Recalcularea activărilor', h: function () { return ['M', 'Placa nu ține minte calculele fiecărui strat, le reface la întoarcere. Economisește multă memorie și costă cam 30 % din timp. Așa a încăput #651.']; } },
+  { id: 'bucati', tip: 'seg', et: 'Învățarea pe bucăți', o: [[1, 'Simbol cu simbol'], [2, 'Bucăți de 2'], [4, 'Bucăți de 4']],
+    h: function () { return ['D', 'În primele două treimi din antrenare rețeaua citește bucăți topite într-una. Autorii au măsurat jumătate din calcul la aceeași notă, pe modele mai mari. La Kronos se probează în laborator.']; } }
+ ]},
+ { t: 'Distribuirea: disc, RAM, procesor, placă', c: [
+  { id: 'date', tip: 'seg', et: 'Unde stau simbolurile', o: [['hdd', 'Disc SAS'], ['ssd', 'SSD'], ['ram', 'RAM'], ['vram', 'Pe placă']],
+    h: function (S) { return { hdd: ['E', 'Fiecare fereastră cere o căutare pe disc, cam 9 ms.'], ssd: ['E', 'Căutare rapidă, sub o milisecundă pe fereastră.'], ram: ['M', 'Tot șirul de simboluri stă în RAM. Lotul urcă pe placă în câteva microsecunde.'], vram: ['E', 'Zero transferuri, dar șirul ocupă memorie pe placă.'] }[S.date]; } },
+  { id: 'paralel', tip: 'com', et: 'Procesorul lucrează în paralel cu placa', h: function () { return ['E', 'Lotul următor, caietul și optimizatorul se pregătesc cât placa înmulțește. Placa nu așteaptă.']; } },
+  { id: 'mvRam', tip: 'com', doar: 'os', et: 'Stările optimizatorului în RAM', h: function () { return ['D', 'Jumătate din memoria greutăților pleacă de pe placă, iar procesorul face pasul AdamW. Probat în simulare.']; } },
+  { id: 'unica', tip: 'com', doar: 'os', et: 'O singură memorie: placă + RAM', h: function () { return ['I', 'Ce nu încape pe placă stă în RAM și e adus la timp prin legătură. Windows se oprește în cazul ăsta.']; } },
+  { id: 'caiet', tip: 'gl', et: 'Caietul din RAM', min: 0, max: 100, pas: 2, f: function (v) { return v ? v + ' GB' : 'fără'; }, h: function () { return ['D', 'Tabel uriaș de perechi și triplete de simboluri, ținut de procesor în RAM. Ce e simplă memorare stă în caiet. Câștig socotit: 10–20 %.']; } },
+  { id: 'slot', tip: 'seg', et: 'Slotul plăcii', o: [['x16', 'x16 (azi)'], ['x8', 'x8 (înainte)']],
+    h: function () { return ['M', 'Legătura dintre RAM și placă: 12,4 GB/s pe x16, jumătate pe x8. Contează când circulă mult între ele.']; } }
+ ]}
+];
+
+var PRESETARI = [
+ { n: 'Windows azi · #513', s: {} },
+ { n: 'Windows azi · #651', s: { straturi: 24, lot: 6, adunare: 16, recalcul: true } },
+ { n: 'OS-ul nostru azi', s: { sistem: 'os', mmOs: 'train', atentie: 'placi3', lot: 2, adunare: 1 } },
+ { n: 'Pista A, cum e planificată', s: { sistem: 'os', mmOs: 'umbra', atentie: 'placi3', colsum: true, lipit: true } }
+];
+
+var S = copie(STANDARD), variante = [], refs = {}, std = calc(STANDARD), downloads = null;
+function copie(o) { var x = {}; for (var k in o) x[k] = o[k]; return x; }
+function nr(v, z) { return Number(v).toLocaleString('ro-RO', { maximumFractionDigits: z || 0, minimumFractionDigits: z || 0 }); }
+function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
+function $(id) { return document.getElementById(id); }
+function toate() { var a = []; GRUPURI.forEach(function (g) { g.c.forEach(function (c) { a.push(c); }); }); return a; }
+function curat(o) { var x = copie(STANDARD); if (!o) return x; toate().forEach(function (c) {
+  var v = o[c.id]; if (v === undefined) return;
+  if (c.tip === 'com') x[c.id] = !!v;
+  else if (c.tip === 'gl') { v = Number(v); if (isFinite(v)) x[c.id] = Math.min(c.max, Math.max(c.min, Math.round(v / c.pas) * c.pas)); }
+  else c.o.forEach(function (p) { if (String(p[0]) === String(v)) x[c.id] = p[0]; });
+ }); return x; }
+function etOpt(c, v) { if (c.tip === 'com') return v ? 'pornit' : 'oprit'; if (c.tip === 'gl') return String(c.f(v));
+  for (var i = 0; i < c.o.length; i++) if (c.o[i][0] === v) return c.o[i][1]; return String(v); }
+
+/* construirea comenzilor */
+function construieste() {
+  var gazda = $('comenzi');
+  GRUPURI.forEach(function (g, gi) {
+    var d = el('details', 'grup'); if (gi === 0) d.open = true;
+    var s = el('summary'); s.appendChild(el('h2', null, g.t)); d.appendChild(s);
+    var inn = el('div', 'in');
+    g.c.forEach(function (c) {
+      var w = el('div', 'cmd'), cap = el('div', 'cap'), idc = 'c-' + c.id, R = { w: w, c: c };
+      var lab;
+      if (c.tip === 'gl' || c.tip === 'sel') { lab = el('label', null, c.et); lab.htmlFor = idc; } else { lab = el('span', 'et', c.et); lab.id = idc + '-et'; }
+      lab.appendChild(el('span', 'schimbat')); cap.appendChild(lab); w.appendChild(cap);
+      if (c.tip === 'gl') {
+        var out = el('output'); out.htmlFor = idc; cap.appendChild(out);
+        var inp = el('input'); inp.type = 'range'; inp.id = idc; inp.min = c.min; inp.max = c.max; inp.step = c.pas;
+        inp.addEventListener('input', function () { S[c.id] = Number(inp.value); deseneaza(); });
+        w.appendChild(inp); R.inp = inp; R.out = out;
+      } else if (c.tip === 'sel') {
+        var sel = el('select'); sel.id = idc;
+        c.o.forEach(function (p) { var o = el('option', null, p[1]); o.value = p[0]; sel.appendChild(o); });
+        sel.addEventListener('change', function () { S[c.id] = sel.value; deseneaza(); });
+        w.appendChild(sel); R.inp = sel;
+      } else if (c.tip === 'seg') {
+        var sg = el('div', 'seg'); sg.setAttribute('role', 'group'); sg.setAttribute('aria-labelledby', idc + '-et'); R.b = [];
+        c.o.forEach(function (p) { var b = el('button', null, p[1]); b.type = 'button';
+          b.addEventListener('click', function () { S[c.id] = p[0]; deseneaza(); }); sg.appendChild(b); R.b.push([p[0], b]); });
+        w.appendChild(sg);
+      } else {
+        var cm = el('button', 'comut'); cm.type = 'button'; cm.id = idc; cm.setAttribute('role', 'switch'); cm.setAttribute('aria-labelledby', idc + '-et');
+        cm.addEventListener('click', function () { S[c.id] = !S[c.id]; deseneaza(); });
+        cap.appendChild(cm); R.inp = cm;
+      }
+      var h = el('p', 'hint'); w.appendChild(h); R.h = h;
+      inn.appendChild(w); refs[c.id] = R;
+    });
+    d.appendChild(inn); gazda.appendChild(d);
+  });
+  var pg = $('presetari');
+  PRESETARI.forEach(function (p) { var b = el('button', 'btn', p.n); b.type = 'button';
+    b.addEventListener('click', function () { S = copie(STANDARD); for (var k in p.s) S[k] = p.s[k]; deseneaza(); }); pg.appendChild(b); });
+}
+
+var SURSA = { M: 'MĂSURAT', D: 'DEDUS', E: 'ESTIMARE', I: 'IPOTEZĂ' };
+function comenzi(r) {
+  toate().forEach(function (c) {
+    var R = refs[c.id], v = S[c.id], inactiv = c.doar && c.doar !== S.sistem;
+    R.w.classList.toggle('inactiv', !!inactiv);
+    R.w.classList.toggle('dif', v !== STANDARD[c.id] && !inactiv);
+    if (c.tip === 'gl') { R.inp.value = v; R.out.textContent = c.f(v); R.inp.disabled = !!inactiv; }
+    else if (c.tip === 'sel') { R.inp.value = v; R.inp.disabled = !!inactiv; }
+    else if (c.tip === 'seg') R.b.forEach(function (p) { p[1].setAttribute('aria-pressed', p[0] === v ? 'true' : 'false'); p[1].disabled = !!inactiv; });
+    else { R.inp.setAttribute('aria-checked', v ? 'true' : 'false'); R.inp.disabled = !!inactiv; }
+    var h = c.h(S, r); R.h.textContent = '';
+    if (inactiv) { R.h.textContent = c.doar === 'os' ? 'Se poate schimba doar în OS-ul nostru.' : 'Se poate schimba doar în Windows.'; return; }
+    var s = el('span', 's ' + h[0], SURSA[h[0]]); R.h.appendChild(s); R.h.appendChild(document.createTextNode(h[1]));
+  });
+}
+
+function motiv(r) {
+  if (!r.incape) return 'Nu încape în memoria plăcii: cere ' + nr(r.nevoie) + ' MiB din ' + nr(r.buget) + '.';
+  if (!r.ramOk) return 'Nu încape în RAM: cere ' + nr(r.ram, 1) + ' GB din 128.';
+  if (r.temp >= 83) return 'Placa trece de 83 °C și paza o oprește.';
+  return '';
+}
+
+function teava(id, flux, gat, sus) {
+  var t = $(id); t.classList.toggle('curge', flux > 0); t.classList.toggle('gat', !!gat);
+  if (flux > 0) t.style.setProperty('--dur', Math.max(0.3, 2 - 0.45 * Math.log10(1 + flux)).toFixed(2) + 's');
+}
+
+function deseneaza() {
+  var r = calc(S), sc = Math.round(100 * r.munca / std.munca), os = S.sistem === 'os';
+  if (!r.porneste) sc = 0;
+  /* HUD */
+  $('hud').classList.toggle('oprit', !r.porneste);
+  $('h-scor').textContent = nr(sc);
+  $('h-simb').textContent = r.porneste ? nr(r.simb) + ' simboluri/s' : 'Rețeta nu pornește';
+  var rap = r.simb / std.simb;
+  $('h-delta').textContent = !r.porneste ? motiv(r) : (Math.abs(sc - 100) < 1 && Math.abs(rap - 1) < 0.005 ? 'La fel ca rețeta de azi' : 'Față de azi: viteza brută × ' + nr(rap, 2) + ' · învățarea × ' + nr(sc / 100, 2));
+  var st = $('h-stare'); st.className = 'pastila ' + (!r.porneste ? 'rau' : r.varsat > 0 ? 'cald' : 'bine');
+  st.textContent = !r.porneste ? 'Nu pornește' : r.varsat > 0 ? 'Cu RAM' : 'Încape';
+
+  /* planșa */
+  var gDisc = r.gat === 'date' && r.tCit >= r.tTok, gCpu = r.gat === 'date' && !gDisc, gLink = r.gat === 'mut';
+  $('b-disc').classList.toggle('gat', gDisc); $('b-cpu').classList.toggle('gat', gCpu);
+  $('b-gpu').classList.toggle('gat', !gDisc && !gCpu && !gLink); $('b-ram').classList.remove('gat');
+  $('disc-stare').textContent = { hdd: 'Trage ferestrele de pe discul SAS, câte o căutare pentru fiecare.', ssd: 'Trage ferestrele de pe SSD.', ram: 'În repaus. Simbolurile sunt deja în RAM.', vram: 'În repaus. Simbolurile sunt pe placă.' }[S.date];
+  var cs = $('cpu-sarcini'); cs.textContent = '';
+  var sar = ['trage loturile']; if (S.tokLive) sar.push('taie textul, ' + S.fire + (S.fire === 1 ? ' nucleu' : ' nuclee'));
+  if (S.caiet > 0) sar.push('ține caietul'); if (os && S.mvRam) sar.push('face pasul AdamW');
+  sar.push(S.paralel ? 'în paralel cu placa' : 'placa îl așteaptă');
+  sar.forEach(function (x) { cs.appendChild(el('li', null, x)); });
+  var disc = S.date === 'hdd' || S.date === 'ssd';
+  teava('t-disc', disc && r.porneste ? 30 : 0, gDisc); teava('t-cpu', r.porneste ? (S.tokLive ? 60 : 4) : 0, gCpu);
+  var rm = $('ram-metru'); rm.firstElementChild.style.width = Math.min(100, r.ram / 128 * 100) + '%'; rm.classList.toggle('plin', !r.ramOk);
+  $('ram-cat').textContent = nr(r.ram, 1) + ' / 128 GB';
+  var ce = []; if (r.r.date > 0.6) ce.push('simboluri ' + nr(r.r.date, 1)); if (r.r.caiet) ce.push('caiet ' + nr(r.r.caiet));
+  if (r.r.optim) ce.push('optimizator ' + nr(r.r.optim, 1)); if (r.r.varsat) ce.push('de pe placă ' + nr(r.r.varsat, 1));
+  $('ram-ce').textContent = ce.length ? ce.join(' · ') + ' GB' : 'Aproape goală';
+  var mbs = r.trafic / 1e6;
+  $('link-nume').textContent = 'PCIe ' + S.slot + ' · ' + (S.slot === 'x16' ? '12,4' : '6,0') + ' GB/s';
+  $('link-trafic').textContent = !r.porneste ? 'Oprită' : 'Circulă ' + (mbs >= 10 ? nr(mbs) : nr(mbs, 2)) + ' MB/s' + (gLink ? ' · aici se pierde timpul' : '');
+  teava('t-jos', r.porneste ? mbs + 1 : 0, gLink); teava('t-sus', r.porneste && (r.varsat > 0 || S.caiet > 0 || (os && S.mvRam)) ? mbs + 1 : 0, gLink);
+  $('g-inc').textContent = r.porneste ? nr(r.incarcare * 100) + ' %' : '0 %';
+  $('g-temp').textContent = nr(r.porneste ? r.temp : 36) + ' °C';
+  $('g-w').textContent = nr(r.porneste ? r.wati : 25) + ' W';
+  var vm = $('vram-metru'), pe = Math.min(r.nevoie, 8192 * 1.0);
+  vm.firstElementChild.style.width = Math.min(100, pe / 8192 * 100) + '%'; vm.classList.toggle('plin', r.nevoie > r.buget && !r.varsat);
+  $('vram-prag').style.left = (r.buget / 8192 * 100) + '%';
+  $('vram-cat').textContent = nr(r.nevoie) + ' / ' + nr(r.buget) + ' MiB';
+  $('vram-ce').textContent = os ? (S.arena === 'tot' ? 'Memoria plăcii, toată a antrenării' : 'Memoria plăcii, arena de 6 GiB') : 'Memoria plăcii, paza la 7.000';
+  var vl = $('vram-lista'); vl.textContent = '';
+  var comp = [['Greutăți', r.v.greutati], ['Gradient și copii de lucru', r.v.lucru], ['Stările optimizatorului', r.v.optim], ['Activări', r.v.activari], ['Ieșirea', r.v.iesire], ['Șirul de simboluri', r.v.date], [os ? 'Zona de lucru a motorului' : 'Windows și ecranul', r.v.sistem]];
+  var mx = 1; comp.forEach(function (c) { if (c[1] > mx) mx = c[1]; });
+  comp.forEach(function (c) { if (c[1] < 0.5) return; var li = el('li'); li.appendChild(el('span', null, c[0]));
+    var b = el('span', 'b'), i = el('i'); i.style.width = (c[1] / mx * 100) + '%'; b.appendChild(i); li.appendChild(b);
+    li.appendChild(el('span', 'n', nr(c[1]) + ' MiB')); vl.appendChild(li); });
+  $('vram-nota').textContent = r.varsat > 0 ? nr(r.varsat) + ' MiB nu încap și stau în RAM. Circulă prin legătură la fiecare lot.' : (r.nevoie > r.buget ? 'Depășește limita cu ' + nr(r.nevoie - r.buget) + ' MiB.' : 'Liber până la limită: ' + nr(r.buget - r.nevoie) + ' MiB.');
+
+  /* timpul */
+  $('timp-total').textContent = 'Un lot de ' + nr(r.N) + ' de simboluri ține ' + nr(r.tLot * 1000, 1) + ' ms.';
+  var stv = $('stiva'), lg = $('legenda'); stv.textContent = ''; lg.textContent = '';
+  r.parti.forEach(function (p) {
+    var pc = p.t / r.tLot * 100;
+    if (pc >= 0.4) { var i = el('i'); i.style.flex = pc + ' 1 0'; i.style.background = CULORI[p.k]; i.title = p.n + ': ' + nr(p.t * 1000, 1) + ' ms'; stv.appendChild(i); }
+    var li = el('li', p.k === r.gat ? 'top' : ''), sw = el('span', 'p'); sw.style.background = CULORI[p.k];
+    li.appendChild(sw); li.appendChild(el('span', 'n', p.n)); li.appendChild(el('span', 'ms', nr(p.t * 1000, 1) + ' ms')); li.appendChild(el('span', 'pc', nr(pc) + ' %'));
+    lg.appendChild(li);
+  });
+
+  /* cifre */
+  var cf = $('cifre'); cf.textContent = '';
+  [['Simboluri pe secundă', r.porneste ? nr(r.simb) : '0', 'azi 39.265'],
+   ['Text pe secundă', r.porneste ? nr(r.textKB, 1) + ' KB' : '0', 'azi ' + nr(std.textKB, 1) + ' KB'],
+   ['O trecere prin tot textul', r.porneste ? (r.oreText < 100 ? nr(r.oreText, 1) + ' ore' : nr(r.oreText / 24, 1) + ' zile') : 'niciodată', 'textul nostru de 4,9 GB'],
+   ['Calcul scos din placă', nr(r.tflop, 1) + ' TFLOP/s', 'Windows azi ' + nr(std.tflop, 1)],
+   ['Mărimea lui Kronos', nr(r.P / 1e6, 1) + ' M', 'parametri'],
+   ['Timpul unui lot', nr(r.tLot * 1000, 1) + ' ms', nr(r.N) + ' simboluri']
+  ].forEach(function (x) { var d = el('div', 'cifra'); d.appendChild(el('span', null, x[0])); d.appendChild(el('b', null, x[1])); d.appendChild(el('em', null, x[2])); cf.appendChild(d); });
+
+  /* de ținut minte */
+  var a = [];
+  if (!r.porneste) a.push(['rau', motiv(r) + (os && !r.incape && !S.unica ? ' Încearcă lot mai mic, recalcularea activărilor, stările optimizatorului în RAM sau o singură memorie.' : !os && !r.incape ? ' Încearcă lot mai mic sau recalcularea activărilor.' : '')]);
+  if (os && S.mmOs === 'int8') a.push(['', 'Antrenarea pe 8 biți e o ipoteză: nu știm dacă se poate scoate pe placă și poate strica nota. Întâi o probă mică.']);
+  if (os && (S.mmOs === 'tile' || S.mmOs === 'tc' || S.mmOs === 'umbra')) a.push(['', 'Viteza programului de înmulțire ales e socotită, nu măsurată. Placa are ultimul cuvânt.']);
+  if (S.bucati > 1) a.push(['', 'Câștigul bucăților e măsurat de autori pe modele mai mari și pe mult mai mult text. În faza pe bucăți modelul nu poate fi examinat.']);
+  if (S.tok === 'cuv') a.push(['', 'Cu un ID pe cuvânt, un cuvânt nevăzut la antrenare nu poate fi nici citit, nici scris. Tabelul de cuvinte singur are ' + nr(r.V * S.latime / 1e6) + ' M de parametri.']);
+  if (S.tok === 'oct') a.push(['', 'Literă cu literă, modelul vede doar ' + nr(r.vedeLitere) + ' de litere odată și are nevoie de mai mulți pași pentru același text.']);
+  if (S.tok !== 'bpe16') a.push(['info', 'Altă tokenizare înseamnă model nou și șirul de simboluri refăcut. #513 și #651 nu se pot continua.']);
+  if (S.croit) a.push(['info', 'Kronos croit pe placă schimbă arhitectura: se antrenează de la zero.']);
+  if (S.caiet > 0) a.push(['info', 'Caietul face parte din model: la scris, Kronos are nevoie de el în RAM.']);
+  if (S.recalcul) a.push(['info', 'Recalcularea dă aceleași rezultate, doar mai încet.']);
+  if (r.simbPas < 12000) a.push(['', 'Un pas de optimizator vede doar ' + nr(r.simbPas) + ' de simboluri. Sub 12.000 antrenarea devine zgomotoasă.']);
+  if (r.varsat > 0) a.push(['', 'Placa lucrează cu ' + nr(r.varsat) + ' MiB ținuți în RAM. Merge, dar legătura devine drumul aglomerat.']);
+  if (!S.paralel && (S.tokLive || S.date === 'hdd')) a.push(['', 'Placa stă degeaba cât procesorul pregătește lotul. Pornește lucrul în paralel.']);
+  if (!a.length) a.push(['info', 'Nimic deosebit. Rețeta e în zona deja măsurată.']);
+  var al = $('atentie'); al.textContent = ''; a.forEach(function (x) { al.appendChild(el('li', x[0], x[1])); });
+
+  comenzi(r);
+  $('text-setari').value = fisier();
+  pastreaza();
+}
+
+/* variante */
+function arataVariante() {
+  var ul = $('variante'); ul.textContent = ''; $('variante-gol').hidden = variante.length > 0;
+  var mx = 100; variante.forEach(function (v) { if (v.scor > mx) mx = v.scor; });
+  variante.forEach(function (v, i) {
+    var li = el('li'), st = el('div');
+    st.appendChild(el('div', 'nm', v.nume + ' · scor ' + nr(v.scor)));
+    st.appendChild(el('div', 'dt', nr(v.simb) + ' simboluri/s · ' + NUME_SISTEM[v.s.sistem] + ' · ' + nr(v.vram) + ' MiB'));
+    li.appendChild(st);
+    var b1 = el('button', null, 'Încarcă'); b1.type = 'button'; b1.addEventListener('click', function () { S = curat(v.s); deseneaza(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+    var b2 = el('button', null, 'Șterge'); b2.type = 'button'; b2.setAttribute('aria-label', 'Șterge ' + v.nume); b2.addEventListener('click', function () { variante.splice(i, 1); arataVariante(); pastreaza(); });
+    li.appendChild(b1); li.appendChild(b2);
+    var b = el('div', 'b'), ii = el('i'); ii.style.width = (v.scor / mx * 100) + '%'; b.appendChild(ii); li.appendChild(b);
+    ul.appendChild(li);
+  });
+}
+var contor = 0;
+$('tine').addEventListener('click', function () {
+  var r = calc(S); contor++;
+  variante.push({ nume: 'Varianta ' + contor, s: copie(S), scor: r.porneste ? Math.round(100 * r.munca / std.munca) : 0, simb: Math.round(r.simb), vram: Math.round(r.nevoie) });
+  if (variante.length > 8) variante.shift();
+  arataVariante(); pastreaza();
+});
+
+/* fișierul */
+function fisier() {
+  var r = calc(S), sc = r.porneste ? Math.round(100 * r.munca / std.munca) : 0, sch = [], cit = {}, timp = {};
+  toate().forEach(function (c) { if (c.doar && c.doar !== S.sistem) return; cit[c.et] = etOpt(c, S[c.id]);
+    if (S[c.id] !== STANDARD[c.id]) sch.push({ ce: c.et, standard: etOpt(c, STANDARD[c.id]), ales: etOpt(c, S[c.id]) }); });
+  r.parti.forEach(function (p) { timp[p.n] = +(p.t * 1000).toFixed(2); });
+  return JSON.stringify({
+    tip: 'kronos-simulator-setari', versiune: 1, data: new Date().toISOString(), scor: sc, scor_standard: 100,
+    setari: S, setari_pe_inteles: cit, schimbat_fata_de_standard: sch,
+    rezultate: { porneste: r.porneste, motiv: motiv(r), simboluri_pe_secunda: Math.round(r.simb), text_kb_pe_secunda: +r.textKB.toFixed(1), ms_pe_lot: +(r.tLot * 1000).toFixed(1),
+      simboluri_pe_lot: r.N, simboluri_pe_pas_de_optimizator: r.simbPas, parametri: r.P, tflop_pe_secunda: +r.tflop.toFixed(2),
+      memoria_placii_mib: Math.round(r.nevoie), limita_memoriei_placii_mib: r.buget, tinut_in_ram_mib: Math.round(r.varsat), ram_gb: +r.ram.toFixed(1),
+      incarcarea_placii: +r.incarcare.toFixed(3), temperatura_c: Math.round(r.temp), wati: Math.round(r.wati), aici_se_pierde_timpul: r.gat, timpul_unui_lot_ms: timp },
+    nota: 'Cifre de simulare, nu măsurători. Model simplificat, potrivit pe Windows #513 și #651, os-403 și os-407.'
+  }, null, 2);
+}
+function spune(t) { $('mesaj').textContent = t; }
+function arataText() { var ta = $('text-setari'); ta.hidden = false; ta.value = fisier(); }
+$('descarca').addEventListener('click', function () {
+  var txt = fisier(), nume = 'kronos-setari-scor-' + JSON.parse(txt).scor + '.json';
+  if (downloads) {
+    downloads.save({ filename: nume, data: txt }).then(function () { spune('Fișierul ' + nume + ' a fost trimis spre descărcare.'); })
+      .catch(function () { arataText(); spune('Descărcarea n-a mers. Textul e mai jos: apasă „Copiază textul”.'); });
+    return;
+  }
+  try {
+    var a = el('a'); a.href = URL.createObjectURL(new Blob([txt], { type: 'application/json' })); a.download = nume;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+    arataText(); spune('Am pornit descărcarea fișierului ' + nume + '. Dacă nu apare, textul e mai jos și îl poți copia.');
+  } catch (e) { arataText(); spune('Descărcarea n-a mers aici. Textul e mai jos: apasă „Copiază textul”.'); }
+});
+$('copiaza').addEventListener('click', function () {
+  arataText(); var ta = $('text-setari');
+  var gata = function () { spune('Textul setărilor e copiat. Lipește-l în chat.'); }, nu = function () { ta.focus(); ta.select(); spune('Textul e selectat mai jos. Ține apăsat pe el și alege Copiază.'); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(ta.value).then(gata, nu); else nu();
+});
+$('incarca-b').addEventListener('click', function () { $('incarca').click(); });
+$('incarca').addEventListener('change', function (ev) {
+  var f = ev.target.files && ev.target.files[0]; if (!f) return;
+  var rd = new FileReader();
+  rd.onload = function () { try { var o = JSON.parse(String(rd.result)); if (!o || o.tip !== 'kronos-simulator-setari' || !o.setari) throw 0; S = curat(o.setari); deseneaza(); spune('Am încărcat setările din ' + f.name + '.'); }
+    catch (e) { spune('Fișierul nu e un fișier de setări al simulatorului. Alege unul descărcat de aici.'); } };
+  rd.readAsText(f); ev.target.value = '';
+});
+$('reset').addEventListener('click', function () { S = copie(STANDARD); deseneaza(); spune(''); });
+
+/* păstrarea stării */
+function pastreaza() { try { localStorage.setItem('kronos-sim', JSON.stringify({ S: S, variante: variante, contor: contor })); } catch (e) {} }
+function porneste(d) {
+  var st = d && d.S ? d : null;
+  if (!st) { try { st = JSON.parse(localStorage.getItem('kronos-sim') || 'null'); } catch (e) { st = null; } }
+  if (st && st.S) { S = curat(st.S); if (Array.isArray(st.variante)) variante = st.variante.filter(function (v) { return v && v.s; }).slice(0, 8).map(function (v) { v.s = curat(v.s); v.nume = String(v.nume || 'Variantă').slice(0, 40); v.scor = Number(v.scor) || 0; v.simb = Number(v.simb) || 0; v.vram = Number(v.vram) || 0; return v; }); contor = Number(st.contor) || variante.length; }
+  construieste(); deseneaza(); arataVariante();
+}
+var hot = window.claude && window.claude.hot;
+if (hot && hot.snapshot) hot.snapshot(function () { return { S: S, variante: variante, contor: contor }; });
+if (hot && hot.ready) hot.ready(porneste); else porneste((hot && hot.data) || {});
+if (window.claude && window.claude.use) window.claude.use('downloads').then(function (d) { downloads = d || null; }).catch(function () {});
+})();
+</script>
+</body>
+</html>
