@@ -21,3 +21,6 @@ Ce se măsoară pe placă se citește din hub (doar citit). Datele proiectelor K
 - **os-412, al doilea test nevăzut:** `colsum` împărțit — prezis (v1.2) 469 ms, real **473,5 ms → −1,0 %**. Fără reglaj.
 - Reperul os-412 (același pas ca os-410, cu ceasul procesorului reparat): 494,9 ms în loc de 475,7 — diferența e ceasul vechi greșit cu ~3,5 %, nu placa. Cazul `os-410` (pasul întreg) înlocuit cu `os-412-reper`; `os-410-mm` rămâne (ceasul plăcii era corect).
 - Verificarea: 15 cifre, eroare medie 0,6 %, niciuna peste 10 %.
+
+## 24 nov 2026, 23:00 (centrul de comandă) — măsurătoare, fără reglaj
+- os-413 (cursa de noapte), forma qkv 1024×2304×768: `mm_train_tile` 1,27 TFLOP/s, `mm_tv_128x128` **1,91 TFLOP/s** (×1,50, aceiași biți). `mm_tv_64x64k8` blocată. `E_OS.tile` rămâne 2,1 până când varianta e legată în pas și măsurată pe tot pasul.
