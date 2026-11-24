@@ -16,3 +16,8 @@ Ce se măsoară pe placă se citește din hub (doar citit). Datele proiectelor K
   - același fișier, model v1.2: **scor 375 → 178**, 13 754 simb/s (8 biți, bucăți și caietul rămân ESTIMĂRI); textul ar da doar 3,1 simboluri pe parametru.
   - aceeași rețetă cu lățimea 768 (mărimea lui #513): scor 153, ~47 000 simb/s (tot pe estimări).
   - doar ce e măsurat azi pe placă (`mm_train_tile`, fără 8 biți / bucăți / caiet / eșantion), restul setărilor lui: scor 8, ~2 950 simb/s.
+
+## 24 nov 2026, 21:30 (centrul de comandă)
+- **os-412, al doilea test nevăzut:** `colsum` împărțit — prezis (v1.2) 469 ms, real **473,5 ms → −1,0 %**. Fără reglaj.
+- Reperul os-412 (același pas ca os-410, cu ceasul procesorului reparat): 494,9 ms în loc de 475,7 — diferența e ceasul vechi greșit cu ~3,5 %, nu placa. Cazul `os-410` (pasul întreg) înlocuit cu `os-412-reper`; `os-410-mm` rămâne (ceasul plăcii era corect).
+- Verificarea: 15 cifre, eroare medie 0,6 %, niciuna peste 10 %.

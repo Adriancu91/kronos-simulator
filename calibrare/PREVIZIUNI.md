@@ -21,5 +21,5 @@ Cea mai îndrăzneață previziune: banc-win-v4 se oprește singur cu „nu înc
 ## Previziuni noi, model v1.2 (24 nov 2026, 20:20 — după os-410; cele de mai sus rămân neschimbate)
 | Test | Ce | Prezis ms/pas | Prezis simb/s | Real | Eroare |
 |---|---|---:|---:|---|---|
-| os-mm-tile-colsum-v12 | OS #513, `mm_train_tile` + colsum împărțit | 469 | 2.185 | | |
+| os-mm-tile-colsum-v12 | OS #513, `mm_train_tile` + colsum împărțit | 469 | 2.185 | **473,5 ms, 2.162 simb/s** (os-412) | **−1,0 %** ✔ |
 | os-cursa-128x128 | cursa de noapte: cea mai bună variantă `mm_train_tile` | — (simulatorul nu știe variantele; se notează doar realul) | | | |
