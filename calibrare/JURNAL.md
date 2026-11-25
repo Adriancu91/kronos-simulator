@@ -48,3 +48,5 @@ Ce se măsoară pe placă se citește din hub (doar citit). Datele proiectelor K
 ## 25 nov 2026, 20:40 (centrul de comandă) — circuitele speciale măsurate
 - os-437: `mm_tc_pf` qkv-513 2,76 TFLOP/s; os-438: **`mm_tc_v4` 4,59 TFLOP/s** (×4,46 față de `mm_tc` 1,02). `E_OS.tc` rămâne 1,56 (descrie `mm_tc` vechi); opțiunea pentru pasul mixt rapid se adaugă după primul pas măsurat (P6-214).
 - os-437 lotul 6: pasul întreg 656,4 ms = 4 680 simb/s (lotul 2: 3 837).
+
+- 25 nov 21:25: os-443 — treapta 64 KiB pe `mm_tc*`: `mm_tc_v4@64k` **8,28 TFLOP/s** (×1,81 față de 4,58), `mm_tc_pf@64k` 4,85. Opțiunea „pasul mixt rapid” se adaugă după primul pas măsurat.
