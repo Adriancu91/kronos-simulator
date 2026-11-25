@@ -50,3 +50,5 @@ Ce se măsoară pe placă se citește din hub (doar citit). Datele proiectelor K
 - os-437 lotul 6: pasul întreg 656,4 ms = 4 680 simb/s (lotul 2: 3 837).
 
 - 25 nov 21:25: os-443 — treapta 64 KiB pe `mm_tc*`: `mm_tc_v4@64k` **8,28 TFLOP/s** (×1,81 față de 4,58), `mm_tc_pf@64k` 4,85. Opțiunea „pasul mixt rapid” se adaugă după primul pas măsurat.
+
+- 25 nov 22:15: os-445 — **pasul mixt rapid #513: 116,9 ms = 8 758 simb/s** (lot 2, 147/147 `mm_tc_v4` la 64 KiB). Previziunea etapei 1 (10 000–15 000 cu lot mare): pe drum. Opțiune nouă în model: de adăugat (pas mixt rapid) la următoarea calibrare.
