@@ -23,3 +23,5 @@ Cea mai îndrăzneață previziune: banc-win-v4 se oprește singur cu „nu înc
 |---|---|---:|---:|---|---|
 | os-mm-tile-colsum-v12 | OS #513, `mm_train_tile` + colsum împărțit | 469 | 2.185 | **473,5 ms, 2.162 simb/s** (os-412) | **−1,0 %** ✔ |
 | os-cursa-128x128 | cursa de noapte: cea mai bună variantă `mm_train_tile` | — (simulatorul nu știe variantele; se notează doar realul) | | | |
+
+| pasul #513 cu treapta automată + cea mai bună variantă (după os-423) | ~200 ms (5 000 simb/s) | (de completat) | DEDUS din proba ocupării |

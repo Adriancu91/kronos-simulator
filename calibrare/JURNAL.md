@@ -36,3 +36,7 @@ Ce se măsoară pe placă se citește din hub (doar citit). Datele proiectelor K
 - **os-423 `--mm-tc` (proba os-352):** `mm_tc` pe placă = biți exacți (6/6), dar qkv-513 **1,02 TFLOP/s** (Cyber-GPU prezicea 8–17; simulatorul presupunea ×1,5 peste `t128`).
 - Reglaj: `E_OS.tc` 4,6 → **1,56** (= 3,05 × 1,02 / 1,96, MĂSURAT izolat pe qkv, raportat la `128x128` din același fel de măsurătoare). `umbra` și `int8` rămân estimări (nemăsurate) — de privit cu grijă: aceeași frână a ocupării le-ar lovi și pe ele.
 - Cauza probabilă (DEDUS): ocuparea — 128 de fire + 24 KiB partajați → 4 grupuri de fire din 48 pe unitate. Proba ocupării rulează acum (os-423).
+
+## 25 nov 2026, 11:45 (centrul de comandă) — os-423 proba ocupării
+- MĂSURAT pe qkv: `mm_train_tile` 1,27 → 3,48 TFLOP/s (64 KiB), `64x64k8` 2,04 → 3,61 (32 KiB), `128x128` 1,91 → 2,84 (16 KiB). Ocuparea era frâna (H1).
+- Modelul nu se schimbă încă (opțiunile lui descriu programele de azi). PREVIZIUNE scrisă înainte de testul cu treapta legată în pas: înmulțirile ~155–165 ms, **pasul #513 ~200 ms ≈ 5 000 simb/s** (DEDUS, din 294,9 ms × 1,91/3,6 + restul de 43,5 ms).
