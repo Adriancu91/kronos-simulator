@@ -44,3 +44,7 @@ Ce se măsoară pe placă se citește din hub (doar citit). Datele proiectelor K
 ## 25 nov 2026, 14:35 (centrul de comandă) — v1.4
 - **os-431:** pasul #513 cu `128x128` + treapta 64 KiB pe tot pasul: **266,8 ms = 3 837 simb/s** (din 338,4). Previziunea scrisă înainte: 200–250 ms → **prea optimistă** (am presupus cea mai bună variantă pe formă; pasul a folosit încă alegerea veche, `128x128` peste tot, limitată de registre).
 - Opțiune nouă `t128tr` (Plăci mari + mai multe echipe pe unitate), `E_OS.t128tr = 4,03` (înmulțirile deduse 223,3 ms din pasul întreg; restul de 43,5 ms din os-418). Caz nou `os-431`.
+
+## 25 nov 2026, 20:40 (centrul de comandă) — circuitele speciale măsurate
+- os-437: `mm_tc_pf` qkv-513 2,76 TFLOP/s; os-438: **`mm_tc_v4` 4,59 TFLOP/s** (×4,46 față de `mm_tc` 1,02). `E_OS.tc` rămâne 1,56 (descrie `mm_tc` vechi); opțiunea pentru pasul mixt rapid se adaugă după primul pas măsurat (P6-214).
+- os-437 lotul 6: pasul întreg 656,4 ms = 4 680 simb/s (lotul 2: 3 837).
