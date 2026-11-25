@@ -27,3 +27,7 @@ Ce se măsoară pe placă se citește din hub (doar citit). Datele proiectelor K
 
 ## 25 nov 2026, 02:10 (centrul de comandă) — măsurătoare, fără reglaj
 - os-416, cursa completă: `mm_tv_128x128` cea mai rapidă pe toate cele 15 forme (~1,9–2,1 TFLOP/s; martorul ~1,3). Câștig estimat pe pas −141 ms (474 → ~333). Previziune pentru legarea în pas (model v1.2 cu `E_OS.tile` × 1,5 doar ca socoteală): ~333 ms; `E_OS.tile` rămâne 2,1 până la măsurătoarea pe pas.
+
+## 25 nov 2026, 05:05 (centrul de comandă) — v1.3
+- **os-418:** `mm_tv_128x128` legată în pasul #513: pasul întreg **338,4 ms = 3 026 simb/s**, înmulțirile 294,9 ms (90 %). Prezis din cursă (DEDUS): ~333 ms → eroare −1,6 %.
+- Model v1.3: opțiune nouă `t128` (Plăci mari 128×128), `E_OS.t128 = 3,05` MĂSURAT din os-418. Cazuri noi `os-418`, `os-418-mm`.

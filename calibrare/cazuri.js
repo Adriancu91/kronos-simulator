@@ -15,6 +15,8 @@ module.exports = [
   { id: 'os-407-atentie', sursa: 'rezultate os-407: atenția 20,5 ms', s: { ...OS513, atentie: 'placi3' }, masura: 'parte:at', real: 20.5 },
   { id: 'os-395-arena', sursa: 'rezultate os-395: arena #513 2×512 = 2.560 MiB în VRAM', s: { ...OS513, atentie: 'baza' }, masura: 'vramTot', real: 2560 },
   { id: 'os-412-reper', sursa: 'rezultate os-412: #513, mm_train_tile + atenția gen 3, pasul întreg 494,9 ms (ceasul procesorului reparat; os-410 dădea 475,7 cu ceasul greșit cu ~3,5 %)', s: { ...OS513, atentie: 'placi3', mmOs: 'tile' }, masura: 'ms', real: 494.9 },
+  { id: 'os-418', sursa: 'rezultate os-418: mm_tv_128x128 + colsum împărțit, pasul întreg 338,4 ms', s: { ...OS513, atentie: 'placi3', mmOs: 't128', colsum: true }, masura: 'ms', real: 338.4 },
+  { id: 'os-418-mm', sursa: 'rezultate os-418: mm_tv_128x128 294,9 ms', s: { ...OS513, atentie: 'placi3', mmOs: 't128', colsum: true }, masura: 'parte:mm', real: 294.9 },
   { id: 'os-412-colsum', sursa: 'rezultate os-412: + colsum împărțit, pasul întreg 473,5 ms', s: { ...OS513, atentie: 'placi3', mmOs: 'tile', colsum: true }, masura: 'ms', real: 473.5 },
   { id: 'os-410-mm', sursa: 'rezultate os-410: mm_train_tile 428,7 ms', s: { ...OS513, atentie: 'placi3', mmOs: 'tile' }, masura: 'parte:mm', real: 428.7 },
   { id: 'os-390-mini', sursa: 'rezultate os-390: modelul mic, pasul întreg 4.150 µs', s: MINI, masura: 'ms', real: 4.15 },
