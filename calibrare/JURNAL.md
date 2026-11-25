@@ -24,3 +24,6 @@ Ce se măsoară pe placă se citește din hub (doar citit). Datele proiectelor K
 
 ## 24 nov 2026, 23:00 (centrul de comandă) — măsurătoare, fără reglaj
 - os-413 (cursa de noapte), forma qkv 1024×2304×768: `mm_train_tile` 1,27 TFLOP/s, `mm_tv_128x128` **1,91 TFLOP/s** (×1,50, aceiași biți). `mm_tv_64x64k8` blocată. `E_OS.tile` rămâne 2,1 până când varianta e legată în pas și măsurată pe tot pasul.
+
+## 25 nov 2026, 02:10 (centrul de comandă) — măsurătoare, fără reglaj
+- os-416, cursa completă: `mm_tv_128x128` cea mai rapidă pe toate cele 15 forme (~1,9–2,1 TFLOP/s; martorul ~1,3). Câștig estimat pe pas −141 ms (474 → ~333). Previziune pentru legarea în pas (model v1.2 cu `E_OS.tile` × 1,5 doar ca socoteală): ~333 ms; `E_OS.tile` rămâne 2,1 până la măsurătoarea pe pas.
