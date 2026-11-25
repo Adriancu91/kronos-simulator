@@ -31,3 +31,8 @@ Ce se măsoară pe placă se citește din hub (doar citit). Datele proiectelor K
 ## 25 nov 2026, 05:05 (centrul de comandă) — v1.3
 - **os-418:** `mm_tv_128x128` legată în pasul #513: pasul întreg **338,4 ms = 3 026 simb/s**, înmulțirile 294,9 ms (90 %). Prezis din cursă (DEDUS): ~333 ms → eroare −1,6 %.
 - Model v1.3: opțiune nouă `t128` (Plăci mari 128×128), `E_OS.t128 = 3,05` MĂSURAT din os-418. Cazuri noi `os-418`, `os-418-mm`.
+
+## 25 nov 2026, 11:10 (centrul de comandă) — v1.3.1
+- **os-423 `--mm-tc` (proba os-352):** `mm_tc` pe placă = biți exacți (6/6), dar qkv-513 **1,02 TFLOP/s** (Cyber-GPU prezicea 8–17; simulatorul presupunea ×1,5 peste `t128`).
+- Reglaj: `E_OS.tc` 4,6 → **1,56** (= 3,05 × 1,02 / 1,96, MĂSURAT izolat pe qkv, raportat la `128x128` din același fel de măsurătoare). `umbra` și `int8` rămân estimări (nemăsurate) — de privit cu grijă: aceeași frână a ocupării le-ar lovi și pe ele.
+- Cauza probabilă (DEDUS): ocuparea — 128 de fire + 24 KiB partajați → 4 grupuri de fire din 48 pe unitate. Proba ocupării rulează acum (os-423).
