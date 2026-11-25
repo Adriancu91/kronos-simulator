@@ -40,3 +40,7 @@ Ce se măsoară pe placă se citește din hub (doar citit). Datele proiectelor K
 ## 25 nov 2026, 11:45 (centrul de comandă) — os-423 proba ocupării
 - MĂSURAT pe qkv: `mm_train_tile` 1,27 → 3,48 TFLOP/s (64 KiB), `64x64k8` 2,04 → 3,61 (32 KiB), `128x128` 1,91 → 2,84 (16 KiB). Ocuparea era frâna (H1).
 - Modelul nu se schimbă încă (opțiunile lui descriu programele de azi). PREVIZIUNE scrisă înainte de testul cu treapta legată în pas: înmulțirile ~155–165 ms, **pasul #513 ~200 ms ≈ 5 000 simb/s** (DEDUS, din 294,9 ms × 1,91/3,6 + restul de 43,5 ms).
+
+## 25 nov 2026, 14:35 (centrul de comandă) — v1.4
+- **os-431:** pasul #513 cu `128x128` + treapta 64 KiB pe tot pasul: **266,8 ms = 3 837 simb/s** (din 338,4). Previziunea scrisă înainte: 200–250 ms → **prea optimistă** (am presupus cea mai bună variantă pe formă; pasul a folosit încă alegerea veche, `128x128` peste tot, limitată de registre).
+- Opțiune nouă `t128tr` (Plăci mari + mai multe echipe pe unitate), `E_OS.t128tr = 4,03` (înmulțirile deduse 223,3 ms din pasul întreg; restul de 43,5 ms din os-418). Caz nou `os-431`.

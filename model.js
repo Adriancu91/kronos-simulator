@@ -10,7 +10,9 @@ const TOK = {
 const E_WIN = { bf16: 28.1, f32: 12.5 };
 // tile: MĂSURAT os-410 (24 nov): 428,7 ms pe pasul #513 2×512. tc/umbra/int8: estimările vechi × 0,38 (cât a ieșit tile față de estimarea lui) — ESTIMARE.
 // t128: MĂSURAT os-418 (25 nov): mm_tv_128x128 294,9 ms pe pasul #513 2×512.
-const E_OS = { train: 1.245, tile: 2.1, t128: 3.05, tc: 1.56, umbra: 10.3, int8: 18.2 };
+// t128tr: os-431 (25 nov): 128x128 + treapta 64 KiB pe tot pasul, pasul 266,8 ms; înmulțirile deduse = 266,8 − 43,5 (restul din os-418) = 223,3 ms.
+// tc: os-423 (25 nov) mm_tc izolat 1,02 TFLOP/s.
+const E_OS = { train: 1.245, tile: 2.1, t128: 3.05, t128tr: 4.03, tc: 1.56, umbra: 10.3, int8: 18.2 };
 const ATT_OS = { baza: 29.8e-6, placi3: 1.67e-6, tc: 0.5e-6 };
 const STANDARD = {
   sistem: 'win', mmWin: 'bf16', mmOs: 'train', atentie: 'baza', colsum: false, lipit: false, masura: false, arena: '6g',
