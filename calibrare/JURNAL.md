@@ -52,3 +52,6 @@ Ce se măsoară pe placă se citește din hub (doar citit). Datele proiectelor K
 - 25 nov 21:25: os-443 — treapta 64 KiB pe `mm_tc*`: `mm_tc_v4@64k` **8,28 TFLOP/s** (×1,81 față de 4,58), `mm_tc_pf@64k` 4,85. Opțiunea „pasul mixt rapid” se adaugă după primul pas măsurat.
 
 - 25 nov 22:15: os-445 — **pasul mixt rapid #513: 116,9 ms = 8 758 simb/s** (lot 2, 147/147 `mm_tc_v4` la 64 KiB). Previziunea etapei 1 (10 000–15 000 cu lot mare): pe drum. Opțiune nouă în model: de adăugat (pas mixt rapid) la următoarea calibrare.
+
+## 26 nov 2026, 07:55 (centrul de comandă) — os-456
+- Pas mixt rapid #513: lot 2 117,5 ms (8 713), prin RAM 112,9 ms (9 073), **lot 6 293,1 ms = 10 480 simb/s**. Profil MĂSURAT: `mm_tc_v4` 73,6 ms / 147 lansări, atenția 20,5 ms, optimizatorul 4,8 ms. Opțiunile „pas mixt rapid” și „lot 6” de adăugat în model la următoarea calibrare.
